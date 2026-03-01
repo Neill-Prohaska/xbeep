@@ -7,13 +7,12 @@ Plays a beep sound when Claude Code finishes responding or needs your input (e.g
 - Beeps when Claude finishes a response (so you know it's your turn)
 - Beeps when Claude needs permission to proceed (e.g., to run a command)
 - Toggle beeps on/off any time by typing `/xbeep` in Claude Code
-- Works on macOS and Linux
+- Works on macOS, Linux, and Windows
 
 ## What you need
 
 - [Claude Code](https://docs.anthropic.com/en/docs/claude-code) already installed and working (you should have a `~/.claude/` directory)
-- macOS or Linux (bash required)
-- **Windows:** only works inside WSL, not native cmd or PowerShell
+- macOS or Linux (bash required), or Windows (PowerShell)
 
 ## Installation
 
@@ -42,6 +41,20 @@ bash install.sh
 ```
 
 The installer copies the necessary files into your Claude Code configuration directory (`~/.claude/`) and registers the notification hooks. You'll see a summary of what it did when it finishes.
+
+### Windows installation
+
+```powershell
+git clone https://github.com/Neill-Prohaska/xbeep.git
+cd xbeep
+powershell -ExecutionPolicy Bypass -File install.ps1
+```
+
+To uninstall:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File install.ps1 -Uninstall
+```
 
 ### Step 3: Restart Claude Code
 
@@ -80,15 +93,31 @@ This setting lasts for the current terminal session only. When you open a new te
 
 ### Custom sound
 
-By default, xbeep plays the macOS system sound "Glass". On Linux, it uses the terminal bell.
+By default, xbeep plays the macOS system sound "Glass". On Linux, it uses the terminal bell. On Windows, it plays a bundled notification sound (`universfield-ping.wav`).
 
-To use a different sound, set this environment variable in your shell profile (e.g., `~/.zshrc` or `~/.bashrc`):
+To use a different sound, set the `XBEEP_SOUND` environment variable to a sound file path.
+
+**macOS / Linux** — add to your shell profile (e.g., `~/.zshrc` or `~/.bashrc`):
 
 ```bash
 export XBEEP_SOUND="/path/to/your/sound.wav"
 ```
 
 Some macOS sounds you can try (all in `/System/Library/Sounds/`): `Glass.aiff`, `Ping.aiff`, `Pop.aiff`, `Tink.aiff`, `Purr.aiff`
+
+**Windows** — the sound file must be a `.wav` file. To set it for the current session:
+
+```powershell
+$env:XBEEP_SOUND = 'C:\path\to\sound.wav'
+```
+
+To make it persistent across all sessions, set it as a user environment variable:
+
+```powershell
+[Environment]::SetEnvironmentVariable('XBEEP_SOUND', 'C:\path\to\sound.wav', 'User')
+```
+
+Then restart Claude Code. Some Windows sounds you can try (in `C:\Windows\Media\`): `Windows Notify System Generic.wav`, `Windows Notify Calendar.wav`, `chimes.wav`, `notify.wav`
 
 ### Debug mode
 
@@ -98,10 +127,16 @@ If beeps aren't working and you want to see what's happening:
 export XBEEP_DEBUG=1
 ```
 
-Then restart Claude Code. Logs will appear in `/tmp/claude/`:
+Then restart Claude Code. Logs will appear in `/tmp/claude/` (macOS/Linux) or `%TEMP%\claude\` (Windows):
 - `hook-debug.log` — command interception log
 - `stop-hook-debug.log` — response-complete beep log
 - `notification-hook-debug.log` — permission-prompt beep log
+
+On Windows, set the debug variable with:
+
+```powershell
+$env:XBEEP_DEBUG = '1'
+```
 
 ## How it works (technical)
 
@@ -117,7 +152,7 @@ The installer places the hook scripts in `~/.claude/hooks/xbeep/` and the `/xbee
 
 Beep on/off state is stored in a temporary file that is automatically cleaned up when your computer restarts.
 
-**Note:** On macOS Terminal.app, each terminal window has its own beep state. On other terminals (iTerm2, Linux terminals, WSL), all Claude Code sessions share the same beep state.
+**Note:** On macOS Terminal.app and on Windows, each Claude Code session has its own beep state. On other terminals (iTerm2, Linux terminals, WSL), all Claude Code sessions share the same beep state.
 
 ## License
 
