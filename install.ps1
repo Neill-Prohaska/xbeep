@@ -104,7 +104,12 @@ if (-not (Test-Path $HookDest)) {
     New-Item -ItemType Directory -Path $HookDest -Force | Out-Null
 }
 Copy-Item (Join-Path $ScriptDir "hooks\scripts\*.ps1") -Destination $HookDest -Force
-Write-Info "Copied PowerShell scripts."
+# Copy bundled notification sound
+$wavFile = Join-Path $ScriptDir "universfield-ping.wav"
+if (Test-Path $wavFile) {
+    Copy-Item $wavFile -Destination $HookDest -Force
+}
+Write-Info "Copied PowerShell scripts and notification sound."
 
 # Copy slash command
 Write-Info "Installing /xbeep command to $CmdDest\"

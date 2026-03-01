@@ -84,13 +84,22 @@ function Write-XbeepDebugLog {
 # --- Sound playback ---
 
 function Play-XbeepSound {
+    # Priority: XBEEP_SOUND env var > bundled WAV > Console::Beep fallback
+    $soundFile = $null
     if ($env:XBEEP_SOUND -and (Test-Path $env:XBEEP_SOUND)) {
+        $soundFile = $env:XBEEP_SOUND
+    } else {
+        $bundled = Join-Path $PSScriptRoot "universfield-ping.wav"
+        if (Test-Path $bundled) { $soundFile = $bundled }
+    }
+
+    if ($soundFile) {
         try {
-            $player = New-Object System.Media.SoundPlayer $env:XBEEP_SOUND
+            $player = New-Object System.Media.SoundPlayer $soundFile
             $player.PlaySync()
             return
         } catch {}
     }
-    # Console::Beep is always audible regardless of Windows sound scheme
+    # Final fallback: always audible regardless of Windows sound scheme
     [Console]::Beep(800, 200)
 }

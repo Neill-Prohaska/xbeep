@@ -93,7 +93,7 @@ This setting lasts for the current terminal session only. When you open a new te
 
 ### Custom sound
 
-By default, xbeep plays the macOS system sound "Glass". On Linux, it uses the terminal bell. On Windows, it plays a short 800Hz tone.
+By default, xbeep plays the macOS system sound "Glass". On Linux, it uses the terminal bell. On Windows, it plays a bundled notification sound (`universfield-ping.wav`).
 
 To use a different sound, set the `XBEEP_SOUND` environment variable to a sound file path.
 
