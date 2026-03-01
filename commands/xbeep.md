@@ -16,7 +16,12 @@ Control audible beep notifications for this session.
 
 **Executing beep state script:**
 
-Execute the following command and display the output:
+On Windows, execute:
+```powershell
+powershell -ExecutionPolicy Bypass -NoProfile -File "$env:USERPROFILE\.claude\hooks\xbeep\beep-state.ps1" $ARGUMENTS
+```
+
+On macOS/Linux, execute:
 ```bash
 bash "$HOME/.claude/hooks/xbeep/beep-state.sh" $ARGUMENTS
 ```
