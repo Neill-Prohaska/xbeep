@@ -14,6 +14,8 @@ if [ -n "${XBEEP_SOUND:-}" ]; then
     SOUND_FILE="$XBEEP_SOUND"
 elif [[ "$OSTYPE" == "darwin"* ]]; then
     SOUND_FILE="/System/Library/Sounds/Glass.aiff"
+elif [[ "$OSTYPE" == msys* || "$OSTYPE" == cygwin* ]]; then
+    SOUND_FILE="${HOOK_DIR}/universfield-happy-message-ping-351298.mp3"
 else
     SOUND_FILE=""  # Linux/WSL: play_sound() will use terminal bell
 fi
@@ -39,6 +41,12 @@ play_sound() {
         paplay "$sound_file" &          # Linux (PulseAudio)
     elif [ -f "$sound_file" ] && command -v aplay &>/dev/null; then
         aplay -q "$sound_file" &        # Linux (ALSA)
+    elif [ -f "$sound_file" ] && command -v powershell.exe &>/dev/null; then
+        # Windows (Git Bash/MSYS/Cygwin): PowerShell MediaPlayer supports MP3
+        local win_path
+        win_path=$(cygpath -w "$sound_file" 2>/dev/null || echo "$sound_file")
+        powershell.exe -NoProfile -Command \
+            "Add-Type -AssemblyName PresentationCore; \$p = [System.Windows.Media.MediaPlayer]::new(); \$p.Open([uri]'${win_path}'); \$p.Play(); Start-Sleep -Seconds 3" &>/dev/null &
     else
         printf '\a'                     # Terminal bell fallback
     fi
