@@ -1,0 +1,8 @@
+{
+  "name": "xbeep",
+  "version": "2.0.0",
+  "description": "Audible notification beeps for Claude Code — beeps when Claude finishes responding or needs input",
+  "author": {
+    "name": "Neill Prohaska"
+  }
+}
