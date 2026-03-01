@@ -8,190 +8,167 @@ long-running tasks.
 
 FEATURES
 --------
-- Beeps on Stop events (Claude finished responding)
-- Beeps on Notification events (permission prompts, user attention needed)
-- Session-scoped toggle via /xbeep slash command
-- Cross-platform: macOS (afplay), Linux (PulseAudio/ALSA), terminal bell
-- Customizable sound via XBEEP_SOUND environment variable
-- Debug mode via XBEEP_DEBUG=1
+- Beeps when Claude finishes a response (so you know it's your turn)
+- Beeps when Claude needs permission to proceed (e.g., to run a command)
+- Toggle beeps on/off any time by typing /xbeep in Claude Code
+- Works on macOS and Linux
 
 
-PREREQUISITES
+WHAT YOU NEED
 -------------
-- Claude Code installed (the ~/.claude/ directory must exist)
-- macOS or Linux
-- Windows: Not supported natively. These are bash scripts and require
-  a Unix shell. If you run Claude Code from within WSL, xbeep will work.
+- Claude Code already installed and working
+  (you should have a ~/.claude/ directory on your machine)
+- macOS or Linux (bash required)
+- Windows: only works inside WSL, not native cmd or PowerShell
 
 
 INSTALLATION
 ============
 
-Quick install
--------------
-1. Copy the xbeep/ folder to anywhere on your machine.
+Step 1: Download this repository
+---------------------------------
+Open a terminal and run:
 
-2. Run the installer:
+  git clone https://github.com/Neill-Prohaska/xbeep.git
 
-     cd xbeep
-     bash install.sh
+This creates a folder called "xbeep" on your machine.
 
-   The installer will:
-   - Copy hook scripts to ~/.claude/hooks/xbeep/
-   - Copy the /xbeep slash command to ~/.claude/commands/
-   - Register hooks in ~/.claude/settings.json
-
-3. Start a new Claude Code session for the hooks to take effect.
+(Alternatively, on GitHub click the green "Code" button, then
+"Download ZIP". Unzip it — you'll get a folder called "xbeep-main".)
 
 
-If you already have a settings.json
-------------------------------------
-If ~/.claude/settings.json already exists with other settings, the
-installer will print the hooks block and ask you to merge it manually.
-Add the three hook entries (Notification, Stop, UserPromptSubmit) into
-your existing "hooks" key.
+Step 2: Run the installer
+--------------------------
+  cd xbeep
+  bash install.sh
+
+If you downloaded the ZIP instead:
+
+  cd xbeep-main
+  bash install.sh
+
+The installer copies the necessary files into your Claude Code
+configuration directory (~/.claude/) and registers the notification
+hooks. You'll see a summary of what it did when it finishes.
 
 
-Manual installation (no installer)
------------------------------------
-1. Copy hooks/scripts/*.sh to ~/.claude/hooks/xbeep/
+Step 3: Restart Claude Code
+-----------------------------
+Close and reopen Claude Code. The beep notifications are now active.
 
-2. Copy commands/xbeep.md to ~/.claude/commands/
 
-3. Add the following to ~/.claude/settings.json (merge into existing
-   file if one exists):
+WHAT IF THE INSTALLER SAYS "MERGE MANUALLY"?
+---------------------------------------------
+If you already have custom settings in ~/.claude/settings.json, the
+installer can't safely modify it automatically. It will print a block
+of text and ask you to add it to your settings file. Open
+~/.claude/settings.json in a text editor and paste the printed block
+inside the outer { } braces. If your file already has a "hooks" section,
+add the three new entries (Notification, Stop, UserPromptSubmit) inside
+the existing "hooks" block rather than creating a duplicate.
 
-     {
-       "hooks": {
-         "Notification": [
-           {
-             "matcher": "",
-             "hooks": [
-               {
-                 "type": "command",
-                 "command": "bash \"$HOME/.claude/hooks/xbeep/notification-beep.sh\"",
-                 "timeout": 5
-               }
-             ]
-           }
-         ],
-         "Stop": [
-           {
-             "matcher": "",
-             "hooks": [
-               {
-                 "type": "command",
-                 "command": "bash \"$HOME/.claude/hooks/xbeep/stop-beep.sh\"",
-                 "timeout": 5
-               }
-             ]
-           }
-         ],
-         "UserPromptSubmit": [
-           {
-             "matcher": "",
-             "hooks": [
-               {
-                 "type": "command",
-                 "command": "bash \"$HOME/.claude/hooks/xbeep/user-prompt-submit-beep.sh\"",
-                 "timeout": 5
-               }
-             ]
-           }
-         ]
-       }
-     }
-
-4. Start a new Claude Code session.
+If this is confusing, ask Claude Code for help:
+  "Please merge xbeep hooks into my ~/.claude/settings.json"
 
 
 UNINSTALL
 ---------
-     cd xbeep
-     bash install.sh --uninstall
+From the folder where you originally ran the installer:
 
-This removes the scripts and slash command. You will need to manually
-remove the hook entries from ~/.claude/settings.json.
+  bash install.sh --uninstall
+
+This removes the scripts and the /xbeep command. You'll also need
+to manually remove the hook entries from ~/.claude/settings.json
+(the uninstaller will remind you which ones).
 
 
 USAGE
 =====
-In any Claude Code session:
+Once installed, beeps are on by default. In any Claude Code session,
+you can control them by typing:
 
   /xbeep          Toggle beep on/off
   /xbeep on       Enable beeps
   /xbeep off      Disable beeps
   /xbeep status   Show current state
 
-Beeping is enabled by default when you start a new session.
+This setting lasts for the current terminal session only. When you
+open a new terminal, beeps start enabled again.
 
 
-CONFIGURATION
-=============
+CONFIGURATION (OPTIONAL)
+========================
 
 Custom sound
 ------------
-Set the XBEEP_SOUND environment variable (in your shell profile) to
-use a different sound file:
+By default, xbeep plays the macOS system sound "Glass". On Linux, it
+uses the terminal bell.
+
+To use a different sound, set this environment variable in your shell
+profile (e.g., ~/.zshrc or ~/.bashrc):
 
   export XBEEP_SOUND="/path/to/your/sound.wav"
 
-On macOS, the default is /System/Library/Sounds/Glass.aiff. Other
-macOS sounds are in the same directory (e.g., Ping.aiff, Pop.aiff,
-Tink.aiff).
-
-On Linux, if no sound file is found or no compatible player (paplay,
-aplay) is available, it falls back to the terminal bell.
+Some macOS sounds you can try (all in /System/Library/Sounds/):
+  Glass.aiff, Ping.aiff, Pop.aiff, Tink.aiff, Purr.aiff
 
 
 Debug mode
 ----------
-Enable verbose logging to diagnose issues:
+If beeps aren't working and you want to see what's happening:
 
   export XBEEP_DEBUG=1
 
-Logs are written to /tmp/claude/ with restricted permissions (mode 700).
-Three log files are created:
-  hook-debug.log              — slash command interception
-  stop-hook-debug.log         — response-complete beeps
-  notification-hook-debug.log — permission beeps
+Then restart Claude Code. Logs will appear in /tmp/claude/:
+  hook-debug.log              — command interception log
+  stop-hook-debug.log         — response-complete beep log
+  notification-hook-debug.log — permission-prompt beep log
 
 
-HOW IT WORKS
-============
-xbeep uses Claude Code's hooks system to intercept three lifecycle events:
+HOW IT WORKS (TECHNICAL)
+========================
+You don't need to understand this to use xbeep. This section is for
+anyone who wants to know what the installer put on their system.
 
-  UserPromptSubmit — intercepts /xbeep commands, toggles beep state,
-                     and exits with code 2 to block the prompt from
-                     reaching Claude
+Claude Code supports "hooks" — shell commands that run automatically
+when certain events happen. xbeep registers three hooks:
 
-  Stop             — plays a sound when Claude finishes its response
+  1. When Claude finishes responding ("Stop" event), a script plays
+     a beep sound.
 
-  Notification     — plays a sound when Claude needs user attention
-                     (e.g., permission prompts)
+  2. When Claude needs your attention, like asking permission to run
+     a command ("Notification" event), a script plays a beep sound.
 
-Beep state is stored in a temp file scoped to your terminal session
-($TMPDIR/claude_beep_enabled_<session_id>). On macOS Terminal.app,
-each window gets independent on/off state via TERM_SESSION_ID. On
-other terminals (iTerm2, Linux terminals, WSL), all sessions in the
-same user account share beep state.
+  3. When you type /xbeep ("UserPromptSubmit" event), a script
+     intercepts the command, toggles the beep state, and prevents
+     the text from being sent to Claude as a question.
+
+The installer places the hook scripts in ~/.claude/hooks/xbeep/ and
+the /xbeep slash command in ~/.claude/commands/. The hooks are
+registered in ~/.claude/settings.json.
+
+Beep on/off state is stored in a temporary file that is automatically
+cleaned up when your computer restarts.
+
+Note: On macOS Terminal.app, each terminal window has its own beep
+state. On other terminals (iTerm2, Linux terminals, WSL), all Claude
+Code sessions share the same beep state.
 
 
-FILE LAYOUT
-===========
-  xbeep/
-    .claude-plugin/
-      plugin.json                    Plugin manifest
-    commands/
-      xbeep.md                       /xbeep slash command definition
-    hooks/scripts/
-      beep-state.sh                  State management (on/off/toggle/status)
-      user-prompt-submit-beep.sh     Intercepts /xbeep commands
-      stop-beep.sh                   Beeps on Stop events
-      notification-beep.sh           Beeps on Notification events
-    install.sh                       Installer (also supports --uninstall)
-    readme.txt                       This file
-    README.md                        Markdown version of this file
+FILES IN THIS REPOSITORY
+=========================
+  .claude-plugin/
+    plugin.json                    Plugin metadata
+  commands/
+    xbeep.md                       Defines the /xbeep slash command
+  hooks/scripts/
+    beep-state.sh                  Manages on/off state
+    user-prompt-submit-beep.sh     Intercepts /xbeep commands
+    stop-beep.sh                   Plays beep when Claude finishes
+    notification-beep.sh           Plays beep when Claude needs input
+  install.sh                       Installer (also supports --uninstall)
+  readme.txt                       This file
+  README.md                        Markdown version (shown on GitHub)
 
 
 LICENSE
