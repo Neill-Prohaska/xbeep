@@ -9,15 +9,20 @@ BEEP_STATE_SCRIPT="${HOOK_DIR}/beep-state.sh"
 XBEEP_DEBUG="${XBEEP_DEBUG:-0}"
 DEBUG_LOG="/tmp/claude/notification-hook-debug.log"
 
+# WSL detection
+is_wsl() {
+    grep -qi microsoft /proc/version 2>/dev/null
+}
+
 # Sound: XBEEP_SOUND env var > OS-appropriate default > terminal bell fallback
 if [ -n "${XBEEP_SOUND:-}" ]; then
     SOUND_FILE="$XBEEP_SOUND"
 elif [[ "$OSTYPE" == "darwin"* ]]; then
     SOUND_FILE="/System/Library/Sounds/Glass.aiff"
-elif [[ "$OSTYPE" == msys* || "$OSTYPE" == cygwin* ]]; then
+elif [[ "$OSTYPE" == msys* || "$OSTYPE" == cygwin* ]] || is_wsl; then
     SOUND_FILE="${HOOK_DIR}/universfield-ping.wav"
 else
-    SOUND_FILE=""  # Linux/WSL: play_sound() will use terminal bell
+    SOUND_FILE=""  # Linux: play_sound() will use terminal bell
 fi
 
 # --- Debug logging (only when XBEEP_DEBUG=1) ---
@@ -37,6 +42,10 @@ play_sound() {
     local sound_file="$1"
     if [ -f "$sound_file" ] && command -v afplay &>/dev/null; then
         afplay "$sound_file" &          # macOS
+    elif is_wsl && [ -f "$sound_file" ] && command -v powershell.exe &>/dev/null; then
+        local win_path
+        win_path=$(wslpath -w "$sound_file" 2>/dev/null)
+        powershell.exe -NoProfile -NonInteractive -c "(New-Object Media.SoundPlayer '$win_path').PlaySync()" &>/dev/null &  # WSL
     elif [ -f "$sound_file" ] && command -v paplay &>/dev/null; then
         paplay "$sound_file" &          # Linux (PulseAudio)
     elif [ -f "$sound_file" ] && command -v aplay &>/dev/null; then

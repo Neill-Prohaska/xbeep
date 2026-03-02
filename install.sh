@@ -61,10 +61,10 @@ mkdir -p "$HOOK_DEST"
 cp "$SCRIPT_DIR/hooks/scripts/"*.sh "$HOOK_DEST/"
 chmod +x "$HOOK_DEST/"*.sh
 
-# Copy default Windows notification sound (needed on Windows for WAV playback)
-if [[ "$OSTYPE" == msys* || "$OSTYPE" == cygwin* ]]; then
-    info "Copying default Windows notification sound..."
+# Copy bundled sound file if present
+if [ -f "$SCRIPT_DIR/universfield-ping.wav" ]; then
     cp "$SCRIPT_DIR/universfield-ping.wav" "$HOOK_DEST/"
+    info "Installed bundled sound: universfield-ping.wav"
 fi
 
 # Copy slash command
