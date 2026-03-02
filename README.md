@@ -7,12 +7,12 @@ Plays a beep sound when Claude Code finishes responding or needs your input (e.g
 - Beeps when Claude finishes a response (so you know it's your turn)
 - Beeps when Claude needs permission to proceed (e.g., to run a command)
 - Toggle beeps on/off any time by typing `/xbeep` in Claude Code
-- Works on macOS, Linux, and Windows
+- Works on macOS, Linux, Windows, and WSL2
 
 ## What you need
 
 - [Claude Code](https://docs.anthropic.com/en/docs/claude-code) already installed and working (you should have a `~/.claude/` directory)
-- macOS or Linux (bash required), or Windows (PowerShell)
+- macOS or Linux (bash required), Windows (PowerShell), or WSL2
 
 ## Installation
 
@@ -54,6 +54,24 @@ To uninstall:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File install.ps1 -Uninstall
+```
+
+### WSL2 installation
+
+Run the same bash installer from inside your WSL terminal:
+
+```bash
+git clone https://github.com/Neill-Prohaska/xbeep.git
+cd xbeep
+bash install.sh
+```
+
+xbeep automatically detects WSL2 and uses `powershell.exe` to play audio via
+Windows audio APIs — no extra software needed. The bundled `universfield-ping.wav`
+is used by default. To use a custom sound, set `XBEEP_SOUND` to any WSL path:
+
+```bash
+export XBEEP_SOUND="/mnt/c/Windows/Media/Windows Notify.wav"
 ```
 
 ### Step 3: Restart Claude Code
